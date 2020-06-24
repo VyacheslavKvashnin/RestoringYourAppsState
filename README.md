@@ -115,6 +115,6 @@ override func decodeRestorableState(with coder: NSCoder) {
 
 ## Test State Restoration on a Device
 
-When debugging your project be aware that the system automatically deletes an app’s preserved state when the user force quits the app. Deleting the preserved state information when the app is killed is a safety precaution. In addition, the system also deletes preserved state if the app crashes at launch time. If you want to test your app’s ability to restore its state, do not use the app switcher to kill the the app during debugging. Instead, use Xcode to kill the app, or kill the app programmatically. One technique is to suspend your app using the Home button, and then stop the debugger in Xcode. When you launch the app again using Xcode, UIKit initiates the state restoration process.
+When debugging your project be aware that the system automatically deletes an app’s preserved state when the user force quits the app. Deleting the preserved state information when the app is forced to quit is a safety precaution. In addition, the system also deletes preserved state if the app crashes at launch time. If you want to test your app’s ability to restore its state, do not use the app switcher to force quit the app during debugging. Instead, use Xcode to quit the app, or quit the app programmatically. One technique is to suspend your app using the Home button, and then stop the debugger in Xcode. When you launch the app again using Xcode, UIKit initiates the state restoration process.
 
 
