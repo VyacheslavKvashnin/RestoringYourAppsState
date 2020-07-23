@@ -2,60 +2,128 @@
 See LICENSE folder for this sample’s licensing information.
 
 Abstract:
-This sample's application delegate.
+The application delegate class.
 */
 
 import UIKit
 
+/** Important Note:
+    With the application scene life cycle, UIKit no longer calls the following functions on the UIApplicationDelegate.
+        applicationWillEnterForeground(_ application: UIApplication)
+        applicationDidEnterBackground(_ application: UIApplication)
+        applicationDidBecomeActive(_ application: UIApplication)
+        applicationWillResignActive(_ application: UIApplication)
+    These UISceneDelegate functions replace them:
+        func sceneWillEnterForeground(_ scene: UIScene)
+        func sceneDidEnterBackground(_ scene: UIScene)
+        func sceneDidBecomeActive(_ scene: UIScene)
+        func sceneWillResignActive(_ scene: UIScene)
+ 
+    If you choose to use the app scene life cycle (opting in with UIApplicationSceneManifest in the Info.plist),
+    but still deploy to iOS 12.x, you need both sets of delegate functions.
+ */
+
 @UIApplicationMain
-class AppDelegate: UIResponder {
+class AppDelegate: UIResponder, UIApplicationDelegate {
     
+    /** The app delegate must implement the window from UIApplicationDelegate
+        protocol to use a main storyboard file.
+    */
     var window: UIWindow?
-}
-
-// MARK: - AppDelegate Lifecycle Support
-
-extension AppDelegate: UIApplicationDelegate {
-    
-    // Tells the delegate the app controller has finished launching.
-    // Note: Equivalent API for scenes is: "scene(_: willConnectTo: options)"
-    //
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
-        self.window?.makeKeyAndVisible()
+    // MARK: - Application Life Cycle
+
+    /** Tells the delegate the app controller has finished launching.
+        Here you will do any one-time app data setup.
+    */
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         return true
     }
 
-}
-
-// MARK: - AppDelegate Scene Lifecycle Support
-
-extension AppDelegate {
+    /** iOS 12.x
+        Tells the delegate that the app is about to enter the foreground.
+        Equivalent API for scenes in UISceneDelegate: "sceneWillEnterForeground(_:)"
+    */
+    func applicationWillEnterForeground(_ application: UIApplication) {
+        //..
+    }
     
-    /** Called when the UIKit is about to create & vend a new UIScene instance to the application.
-        Use this method to select a configuration to create the new scene with.
-        The application delegate may modify the provided UISceneConfiguration within this method.
-        If the UISceneConfiguration instance returned from this method does not have a systemType
-        which matches the connectingSession's, UIKit will assert.
+    /** iOS 12.x
+        Tells the delegate that the app has become active.
+        Equivalent API for scenes in UISceneDelegate:: "sceneDidBecomeActive(_:)"
+    */
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        //..
+    }
+    
+    /** iOS 12.x
+        Tells the delegate that the app is about to become inactive.
+        Equivalent API for scenes in UISceneDelegate:: sceneWillResignActive(_:)
+    */
+    func applicationWillResignActive(_ application: UIApplication) {
+        // Save any pending changes to the product list.
+        DataModelManager.sharedInstance.saveDataModel()
+    }
+    
+    /** iOS 12.x
+        Tells the delegate that the app is now in the background.
+        Equivalent API for scenes in UISceneDelegate:: sceneDidEnterBackground(_:)
+    */
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        // Save any pending changes to the product list.
+        DataModelManager.sharedInstance.saveDataModel()
+    }
+    
+    /** iOS 12.x
+        Tells the delegate that the data for continuing an activity is available.
+        Equivalent API for scenes is: scene(_:continue:)
+    */
+    func application(_ application: UIApplication,
+                     continue userActivity: NSUserActivity,
+                     restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
+        return false // Not applicable here at the app delegate level.
+    }
+    
+    // MARK: - Scene Configuration
+
+    /** iOS 13 or later
+        UIKit uses this delegate when it is about to create and vend a new UIScene instance to the application.
+        Use this function to select a configuration to create the new scene with.
+        You can define the scene configuration in code here, or define it in the Info.plist.
+     
+        The application delegate may modify the provided UISceneConfiguration within this function.
+        If the UISceneConfiguration instance that returns from this function does not have a systemType
+        that matches the connectingSession's, UIKit asserts.
     */
     @available(iOS 13.0, *)
     func application(_ application: UIApplication,
                      configurationForConnecting connectingSceneSession: UISceneSession,
                      options: UIScene.ConnectionOptions) -> UISceneConfiguration {
-        return UISceneConfiguration(name: "Main Scene", sessionRole: connectingSceneSession.role)
+        var sceneConfig = connectingSceneSession.configuration
+        
+        // Find the user activity, if available, to create the scene configuration.
+        var currentActivity: NSUserActivity?
+        options.userActivities.forEach { activity in
+            currentActivity = activity
+        }
+        if currentActivity != nil {
+            if currentActivity!.activityType == ImageSceneDelegate.ImageSceneActivityType() {
+                sceneConfig = UISceneConfiguration(name: "Second Scene", sessionRole: .windowApplication)
+            }
+        }
+        return sceneConfig
     }
     
-    /** The scene session was discarded by the user.
+    /** iOS 13 or later
+        The system calls this delegate when it removes one or more representations from the -[UIApplication openSessions] set
+        due to a user interaction or a request from the app itself. If the system discards sessions while the app isn't running,
+        it calls this function shortly after the app’s next launch.
      
-        Use this method to release any resources that were specific to the discarded scenes, as they will not return.
-        Remove any state or data associated with this session, as it will not return.
-
-        Called when the system, due to a user interaction or a request from the application itself,
-        removes one or more representation from the -[UIApplication openSessions] set.
-     
-        If any sessions were discarded while the application was not running,
-        this will be called shortly after application:didFinishLaunchingWithOptions.
-     */
+        Use this function to:
+        Release any resources that were specific to the discarded scenes, as they will NOT return.
+        Remove any state or data associated with this session, as it will not return (such as, unsaved draft of a document).
+    */
     @available(iOS 13.0, *)
     func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
         //..
@@ -63,87 +131,30 @@ extension AppDelegate {
 
 }
 
-// MARK: - AppDelegate State Restoration
+// MARK: - State Restoration
 
 extension AppDelegate {
-    
-    /**	Apps must implement this method and the application:shouldSaveApplicationState: method for
- 		state preservation to occur. In addition, your implementation of this method must return true
- 		each time UIKit tries to preserve the state of your app. You can return NO to disable state
- 		preservation temporarily. For example, during testing, you could disable state preservation
- 		to test specific code paths.
- 	*/
-/// - Tag: shouldSaveApplicationState
+
+    // For non-scene-based versions of this app on iOS 13.1 and earlier.
     func application(_ application: UIApplication, shouldSaveApplicationState coder: NSCoder) -> Bool {
         return true
     }
-    
-    /**	Apps must implement this method and the application:shouldRestoreApplicationState: method for
- 		state preservation to occur. In addition, your implementation of this method must return true
- 		each time UIKit tries to restore the state of your app. You can use the information in the
- 		provided coder object to decide whether or not to proceed with state restoration. For example,
- 		you might return NO if the data in the coder is from a different version of your app and cannot
- 		be effectively restored to the current version.
-    */
-/// - Tag: shouldRestoreApplicationState
+
+    // For non-scene-based versions of this app on iOS 13.1 and earlier.
     func application(_ application: UIApplication, shouldRestoreApplicationState coder: NSCoder) -> Bool {
         return true
     }
     
-    /**	Store application state data not necessarily related to the user interface, this is called when the app is suspended to the background.
-     	The state preservation system calls this method at the beginning of the preservation process.
-     	This is your opportunity to add any app-level information to state information.
-     	For example, you might use this method to write version information or the high-level
-        configuration of your app.
-	*/
-    func application(_ application: UIApplication, willEncodeRestorableStateWith coder: NSCoder) {
-        // Encode any application state data at the app delegate level.
+    @available(iOS 13.2, *)
+    // For non-scene-based versions of this app on iOS 13.2 and later.
+    func application(_ application: UIApplication, shouldSaveSecureApplicationState coder: NSCoder) -> Bool {
+        return true
     }
     
-    /**	Reload application state data not necessarily related to the user interface, this is called when the app is re-launched.
-     	The state restoration system calls this method as the final step in the state restoration process.
-     	By the time this method is called, all other restorable objects will have been restored and
-     	put back into their previous state. You can use this method to read any high-level app data
-     	you saved in the application:willEncodeRestorableStateWithCoder: method and apply it to your app.
-	*/
-    func application(_ application: UIApplication, didDecodeRestorableStateWith coder: NSCoder) {
-        /**	Decode any application state data at the app delegate level.
-    		If you plan to do any asynchronous initialization for restoration -
-    		Use these methods to inform the system that state restoration is occuring
-   			asynchronously after the application has processed its restoration archive on launch.
-    		In the event of a crash, the system will be able to detect that it may have been
-   			caused by a bad restoration archive and arrange to ignore it on a subsequent application launch.
-		*/
-        UIApplication.shared.extendStateRestoration()
-
-        DispatchQueue.global(qos: .background).async {
-            /**	On background thread:
-    			Do any additional asynchronous initialization work here.
-            */
-            DispatchQueue.main.async {
-                // Back on main thread: Done asynchronously initializing, complete our state restoration.
-                UIApplication.shared.completeStateRestoration()
-            }
-        }
+    @available(iOS 13.2, *)
+    // For non-scene-based versions of this app on iOS 13.2 and later.
+    func application(_ application: UIApplication, shouldRestoreSecureApplicationState coder: NSCoder) -> Bool {
+        return true
     }
     
-    /** Asks the  the application delegate to provide the specified view controller.
- 		Returns the view controller object to use or nil if the app delegate does not supply this view controller.
-     
-     	During state restoration, when UIKit encounters a view controller without a restoration class,
-     	it calls this method to ask for the corresponding view controller object. Your implementation
-     	of this method should create (or find) the corresponding view controller object and return it.
-     	If your app delegate does not provide the view controller, return nil.
- 	*/
-	func application(
-        	_ application: UIApplication,
-            viewControllerWithRestorationIdentifierPath identifierComponents: [String],
-            coder: NSCoder) -> UIViewController? {
-        /** If you don't assign a restoration class to each view controller created inside this class,
-         	here we need to implement this function.
-         */
-        return nil
-    }
-
 }
-
