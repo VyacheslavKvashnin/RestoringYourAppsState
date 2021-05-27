@@ -229,7 +229,7 @@ extension EditViewController {
 
 // MARK: - DoneEditDelegate
 
-protocol DoneEditDelegate: class {
+protocol DoneEditDelegate: AnyObject {
     // Notifies the delegate that the system has completed editing the product.
     func doneEdit(_ editViewController: EditViewController, product: Product)
 }
