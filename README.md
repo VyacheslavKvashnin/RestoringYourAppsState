@@ -54,7 +54,7 @@ Scene-based state restoration is the recommended way to restore the app’s user
 
 This sample preserves its state by saving the state of its view controller hierarchy. View controllers adopt the [`UIStateRestoring`](https://developer.apple.com/documentation/uikit/uistaterestoring) protocol, which defines methods for saving custom state information to an archive and restoring that information later.
 
-The sample specifies which of its view controllers to save, and assigns a restoration identifier to that view controller. A restoration identifier is a string that UIKit uses to identify a view controller or other user interface element. The identifier for each view controller must be unique. The sample assigns the identifiers in Interface Builder, but this can aso occur in code.
+The sample specifies which of its view controllers to save, and assigns a restoration identifier to that view controller. A restoration identifier is a string that UIKit uses to identify a view controller or other user interface element. The identifier for each view controller must be unique. The sample assigns the identifiers in Interface Builder, but this can also occur in code.
 
 The sample assigns a restoration ID for each view controller in the storyboard file. This information is available by selecting the view controller and looking at the Identity Inspector. The Storyboard ID for that view controller is usually the same as the Restoration ID.
 
